@@ -1,9 +1,7 @@
-
 #include "server.h"
 vector<bool> server::sock_arr(1000,false);    //将10000个位置都设为false，sock_arr[i]=false表示套接字描述符i未打开（因此不能关闭）
 //构造函数
 server::server(int port,string ip):server_port(port),server_ip(ip){}
-
 server::~server(){
     for(int i=0;i<sock_arr.size();i++){
         if(sock_arr[i])
@@ -81,15 +79,16 @@ void server::RecvMsg(int conn){
 void server::HandleRequest(int conn,string str){
     char buffer[1000];
     string name,pass;
-    // bool if_login=false;//记录当前服务对象是否成功登录
-    //string login_name;//记录当前服务对象的名字
+    bool if_login=false;//记录当前服务对象是否成功登录
+    string login_name;//记录当前服务对象的名字
     //string target_name;//记录发送信息时目标用户的名字
     //int group_num;//记录群号
 
 
     //连接MYSQL数据库
     MYSQL *con=mysql_init(NULL);
-    if(!mysql_real_connect(con,"127.0.0.1","root","test","ChatProject",0,NULL,CLIENT_MULTI_STATEMENTS)){
+    if(!mysql_real_connect(con,"127.0.0.1","root",NULL,"ChatProject",0,NULL,CLIENT_MULTI_STATEMENTS))
+    {
         cout<<"连接失败"<< mysql_error(con)<<endl;
     }
 
@@ -103,10 +102,49 @@ void server::HandleRequest(int conn,string str){
         search+=pass;
         search+="\");";
         cout<<"sql语句:"<<search<<endl<<endl;
-        if(mysql_query(con,search.c_str())){
-            cout<< "插入失败"<<mysql_error(con)<<endl;
+        if(!mysql_query(con,search.c_str())){
+            cout<<"成功"<<endl;    
         }else{
-            cout<<"insert failed"<<endl;
+            mysql_error(con);
+        }
+    }
+    else if(str.find("login")!=str.npos){
+        int p1=str.find("login"),p2=str.find("pass:");
+        name=str.substr(p1+5,p2-5);
+        pass=str.substr(p2+5,str.length()-p2-4);
+        string search="SELECT * FROM USER WHERE NAME=\"";
+        search+=name;
+        search+="\";";
+        cout<<"sql语句:"<<search<<endl;
+        auto search_res=mysql_query(con,search.c_str());
+        auto result=mysql_store_result(con);
+        int col=mysql_num_fields(result);//获取列数
+        int row=mysql_num_rows(result);//获取行数
+        //查询到用户名
+        if(search_res==0&&row!=0){
+            cout<<"查询成功\n";
+            auto info=mysql_fetch_row(result);//获取一行的信息
+            cout<<"查询到用户名:"<<info[0]<<" 密码:"<<info[1]<<endl;
+            //密码正确
+            if(info[1]==pass){
+                cout<<"登录密码正确\n\n";
+                string str1="ok";
+                if_login=true;
+                login_name=name;//记录下当前登录的用户名
+                send(conn,str1.c_str(),str1.length()+1,0);
+            }
+            //密码错误
+            else{
+                cout<<"登录密码错误\n\n";
+                char str1[100]="wrong";
+                send(conn,str1,strlen(str1),0);
+            }
+        }
+        //没找到用户名
+        else{
+            cout<<"查询失败\n\n";
+            char str1[100]="wrong";
+            send(conn,str1,strlen(str1),0);
         }
     }
 }
