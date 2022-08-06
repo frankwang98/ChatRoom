@@ -16,7 +16,8 @@
 #include <vector>
 #include <mysql/mysql.h>
 #include <unordered_map>    
-#include <pthread.h>    
+#include <pthread.h>
+#include <set>    
 using namespace std;
 
 #endif

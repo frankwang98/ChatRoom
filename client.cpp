@@ -35,8 +35,13 @@ void client::SendMsg(int conn){
     {
         string str;
         cin>>str;
-        str="content:"+str;
-        int ret=send(conn, str.c_str(), str.length(),0); //发送
+        if(conn>0){
+            str="content:"+str;
+        }
+        else if(conn<0){
+            str="gr_message:"+str;
+        }
+        int ret=send(abs(conn), str.c_str(), str.length(),0); //发送
         //输入exit或者对端关闭时结束
         if(str=="content:exit"||ret<=0)
             break;
@@ -156,6 +161,18 @@ void client::HandleClient(int conn){
             send(sock,sendstr.c_str(),sendstr.length(),0);//先向服务器发送目标用户、源用户
             cout<<"请输入你想说的话(输入exit退出): \n";
             thread t1(client::SendMsg,conn); //创建发送线程
+            thread t2(client::RecvMsg,conn);//创建接收线程
+            t1.join();
+            t2.join();
+        }
+                else if(choice==2){
+            cout<<"请输入群号:";
+            int num;
+            cin>>num;
+            string sendstr("group:"+to_string(num));
+            send(sock,sendstr.c_str(),sendstr.length(),0);
+            cout<<"请输入你想说的话(输入exit退出)：\n";
+            thread t1(client::SendMsg,-conn); //创建发送线程，传入负数，和私聊区分开
             thread t2(client::RecvMsg,conn);//创建接收线程
             t1.join();
             t2.join();
