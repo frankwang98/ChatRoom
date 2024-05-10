@@ -1,4 +1,5 @@
 #include "server.h"
+
 vector<bool> server::sock_arr(1000,false);    //将10000个位置都设为false，sock_arr[i]=false表示套接字描述符i未打开（因此不能关闭）
 unordered_map<string,int> server::name_sock_map;//名字和套接字描述符
 pthread_mutex_t server::name_sock_mutx;//互斥锁，锁住需要修改name_sock_map的临界区
@@ -9,6 +10,8 @@ pthread_mutex_t server::group_mutx;
 server::server(int port,string ip):server_port(port),server_ip(ip){
     pthread_mutex_init(&name_sock_mutx, NULL); //创建互斥锁
 }
+
+// 析构函数
 server::~server(){
     for(int i=0;i<sock_arr.size();i++){
         if(sock_arr[i])
@@ -102,7 +105,6 @@ void server::HandleRequest(int conn,string str,tuple<bool,string,string,int,int>
     string target_name=get<2>(info);//记录目标对象的名字
     int target_conn=get<3>(info);//目标对象的套接字描述符
     int group_num = get<4>(info);
-
 
     //连接MYSQL数据库
     MYSQL *con=mysql_init(NULL);
