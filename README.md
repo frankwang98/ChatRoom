@@ -1,11 +1,13 @@
 # chatproject
 a chatproject C++ from lanqiaowang
+服务端与客户端通信示例，用到socket网络编程、多线程、数据库MySQL等。
 
-## install
-sudo apt-get install build-essential libmysqlclient-dev libmysqlcppconn-dev
+## Install
+`sudo apt-get install build-essential libmysqlclient-dev libmysqlcppconn-dev`
 
-## run
-make
+## Build
+makefile
+CMakeLists
 
 ## Q&A
 ### bind: Address already in use
